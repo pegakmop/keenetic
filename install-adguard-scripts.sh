@@ -12,7 +12,7 @@ SUBDOMAINS_FILE="$BASE_DIR/subdomains.log"
 
 # Функция для логирования
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"
+    echo "$(date '+%H:%M:%S') - $*" >> "$LOG_FILE"
 }
 
 # Создание директорий
@@ -49,7 +49,7 @@ create_update_script() {
     echo 'fi' >> "$SCRIPT_FILE"
 
     # Логирование
-    echo 'log() { echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"; }' >> "$SCRIPT_FILE"
+    echo 'log() { echo "$(date '+%H:%M:%S') - $*" >> "$LOG_FILE"; }' >> "$SCRIPT_FILE"
 
     # Загрузка сайтов
     echo 'TEMP_FILE="/tmp/tempfile.$RANDOM"; UNIQUE_TMP_FILE="/tmp/uniquefile.$RANDOM"; touch "$TEMP_FILE" "$UNIQUE_TMP_FILE"' >> "$SCRIPT_FILE"

@@ -54,7 +54,7 @@ create_update_script() {
     # Загрузка сайтов
     echo 'TEMP_FILE="/tmp/tempfile.$RANDOM"; UNIQUE_TMP_FILE="/tmp/uniquefile.$RANDOM"; touch "$TEMP_FILE" "$UNIQUE_TMP_FILE"' >> "$SCRIPT_FILE"
     echo 'log "Загрузка списка сайтов из $GITHUB_URL"' >> "$SCRIPT_FILE"
-    echo 'wget -q -O "$TEMP_FILE" "$GITHUB_URL" || { log "Ошибка при загрузке списка"; exit 1; }' >> "$SCRIPT_FILE"
+    echo 'curl -fsSL "$GITHUB_URL" -o "$TEMP_FILE" || { log "Ошибка при загрузке списка"; exit 1; }' >> "$SCRIPT_FILE"
 
     # Очистка временных файлов
     echo 'log "Очистка временных файлов"; rm -f "$TEMP_FILE" "$UNIQUE_TMP_FILE"' >> "$SCRIPT_FILE"

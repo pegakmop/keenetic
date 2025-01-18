@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Переменные
 BASE_DIR="/opt/etc/AdGuardHome/scripts"

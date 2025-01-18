@@ -2,6 +2,7 @@
 
 # Переменные
 BASE_DIR="/opt/etc/AdGuardHome/scripts"
+ADGUARD_BINARY="/opt/etc/AdGuardHome/AdGuardHome"  # Новый путь к AdGuardHome
 CONFIG_FILE="$BASE_DIR/config.sh"
 SCRIPT_FILE="$BASE_DIR/update_sites.sh"
 LOG_FILE="$BASE_DIR/script.log"
@@ -9,22 +10,33 @@ OUTPUT_FILE="/opt/etc/AdGuardHome/ipset.conf"
 LOCAL_FILE="$BASE_DIR/my-domains-list.conf"
 DUPLICATES_FILE="$BASE_DIR/duplicates.log"
 SUBDOMAINS_FILE="$BASE_DIR/subdomains.log"
-ADGUARD_BINARY="/opt/AdGuardHome/AdGuardHome"  # Путь к бинарному файлу AdGuardHome
 
 # Функция для логирования
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"
 }
 
-# Проверка установки AdGuardHome
+# Функция для проверки установки AdGuardHome
 check_adguardhome() {
-    if [ ! -f "$ADGUARD_BINARY" ]; then
-        echo "Ошибка: AdGuardHome не установлен или недоступен по пути $ADGUARD_BINARY"
-        echo "Убедитесь, что AdGuardHome установлен и доступен по этому пути."
-        exit 1
+    if [ -f "$ADGUARD_BINARY" ]; then
+        echo "AdGuardHome установлен: $ADGUARD_BINARY"
+        log "AdGuardHome установлен: $ADGUARD_BINARY"
     else
-        echo "AdGuardHome найден: $ADGUARD_BINARY"
-        log "AdGuardHome найден: $ADGUARD_BINARY"
+        echo "Ошибка: AdGuardHome не найден!"
+        echo "Убедитесь, что AdGuardHome установлен и доступен по пути $ADGUARD_BINARY"
+        exit 1
+    fi
+}
+
+# Функция для проверки, что AdGuardHome работает
+check_adguardhome_running() {
+    if pgrep -f "$ADGUARD_BINARY" >/dev/null 2>&1; then
+        echo "AdGuardHome работает."
+        log "AdGuardHome работает."
+    else
+        echo "Ошибка: AdGuardHome установлен, но не запущен!"
+        echo "Убедитесь, что AdGuardHome запущен."
+        exit 1
     fi
 }
 
@@ -75,13 +87,19 @@ create_update_script() {
     log "Создан основной скрипт: $SCRIPT_FILE"
 }
 
-# Основная функция установки
+# Основная установка
 main() {
     log "Запуск скрипта установки"
-    check_adguardhome       # Проверка установки AdGuardHome
+
+    # Проверки
+    check_adguardhome       # Проверяем наличие AdGuardHome
+    check_adguardhome_running  # Проверяем, что AdGuardHome запущен
+
+    # Установка
     create_directories      # Создание директорий
     create_config_file      # Создание файла конфигурации
     create_update_script    # Создание основного скрипта
+
     echo "Установка завершена! Основной скрипт находится по адресу: $SCRIPT_FILE"
     echo "Для запуска выполните: $SCRIPT_FILE"
 }

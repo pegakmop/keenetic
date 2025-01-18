@@ -2,7 +2,6 @@
 
 # Переменные
 BASE_DIR="/opt/etc/AdGuardHome/scripts"
-ADGUARD_BINARY="/opt/etc/AdGuardHome/AdGuardHome"  # Новый путь к AdGuardHome
 CONFIG_FILE="$BASE_DIR/config.sh"
 SCRIPT_FILE="$BASE_DIR/update_sites.sh"
 LOG_FILE="$BASE_DIR/script.log"
@@ -14,30 +13,6 @@ SUBDOMAINS_FILE="$BASE_DIR/subdomains.log"
 # Функция для логирования
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $*" >> "$LOG_FILE"
-}
-
-# Функция для проверки установки AdGuardHome
-check_adguardhome() {
-    if [ -f "$ADGUARD_BINARY" ]; then
-        echo "AdGuardHome установлен: $ADGUARD_BINARY"
-        log "AdGuardHome установлен: $ADGUARD_BINARY"
-    else
-        echo "Ошибка: AdGuardHome не найден!"
-        echo "Убедитесь, что AdGuardHome установлен и доступен по пути $ADGUARD_BINARY"
-        exit 1
-    fi
-}
-
-# Функция для проверки, что AdGuardHome работает
-check_adguardhome_running() {
-    if pgrep -f "$ADGUARD_BINARY" >/dev/null 2>&1; then
-        echo "AdGuardHome работает."
-        log "AdGuardHome работает."
-    else
-        echo "Ошибка: AdGuardHome установлен, но не запущен!"
-        echo "Убедитесь, что AdGuardHome запущен."
-        exit 1
-    fi
 }
 
 # Создание директорий
@@ -90,10 +65,6 @@ create_update_script() {
 # Основная установка
 main() {
     log "Запуск скрипта установки"
-
-    # Проверки
-    check_adguardhome       # Проверяем наличие AdGuardHome
-    check_adguardhome_running  # Проверяем, что AdGuardHome запущен
 
     # Установка
     create_directories      # Создание директорий

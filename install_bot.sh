@@ -116,6 +116,11 @@ process_message() {
     local COMMAND=\$(echo "\$MESSAGE" | awk '{print \$1}')
     local ARG=\$(echo "\$MESSAGE" | awk '{print \$2}')
 
+    # Игнорируем сообщения, которые не начинаются с "/"
+    if [[ ! "\$COMMAND" =~ ^/ ]]; then
+        return
+    fi
+
     case "\$COMMAND" in
         /add)
             if [ -z "\$ARG" ]; then
@@ -135,10 +140,8 @@ process_message() {
             list_domains
             ;;
         *)
-            # Игнорируем сообщения, которые не являются командами
-            if [[ "\$COMMAND" =~ ^/ ]]; then
-                send_telegram_message "❌ Неизвестная команда. Доступные команды:\n/add <domain>\n/remove <domain>\n/list"
-            fi
+            # Отправляем сообщение об ошибке только для команд, начинающихся с "/"
+            send_telegram_message "❌ Неизвестная команда. Доступные команды:\n/add <domain>\n/remove <domain>\n/list"
             ;;
     esac
 }

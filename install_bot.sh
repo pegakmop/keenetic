@@ -43,34 +43,32 @@ create_initd_script() {
     INITD_SCRIPT="/opt/etc/init.d/domain_bot"
 
     cat <<EOF > "$INITD_SCRIPT"
-#!/bin/sh /etc/rc.common
+#!/bin/sh
 
-START=99
-STOP=10
+# Загружаем конфигурацию (если есть)
+if [ -f /opt/etc/domain_bot/domain_bot.conf ]; then
+    . /opt/etc/domain_bot/domain_bot.conf
+fi
 
-BOT_SCRIPT="$BOT_SCRIPT"
-LOG_FILE="$LOG_FILE"
+# Настройки
+ENABLED=yes
+PROCS=domain_bot.sh
+ARGS=""
+PREARGS=""
+DESC="Telegram Bot for Domain Management"
+PATH=/opt/sbin:/opt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-start() {
-    echo "Запуск бота..."
-    \$BOT_SCRIPT >> "\$LOG_FILE" 2>&1 &
+# Загружаем общие функции
+. /opt/etc/init.d/rc.func
+
+# Дополнительные действия перед запуском (если нужно)
+pre_start() {
+    echo "Подготовка к запуску бота..."
 }
 
-stop() {
-    echo "Остановка бота..."
-    PID=\$(pidof domain_bot.sh)
-    if [ -n "\$PID" ]; then
-        kill "\$PID"
-        echo "✅ Процесс domain_bot.sh остановлен."
-    else
-        echo "❌ Процесс domain_bot.sh не найден."
-    fi
-}
-
-restart() {
-    stop
-    sleep 1
-    start
+# Дополнительные действия после остановки (если нужно)
+post_stop() {
+    echo "Очистка после остановки бота..."
 }
 EOF
 
@@ -93,8 +91,8 @@ install_bot() {
     # Запрос необходимой информации
     BOT_TOKEN=$(ask_for_input "Введите токен вашего бота")
     CHAT_ID=$(ask_for_input "Введите ваш chat_id")
-    LOCAL_FILE=$(ask_for_input "Введите путь к файлу доменов" "/opt/etc/AdGuardHome/my-domains-list.conf")
-    LOG_DIR=$(ask_for_input "Введите путь к папке для логов" "/opt/etc/AdGuardHome/script_logs")
+    LOCAL_FILE=$(ask_for_input "Введите путь к файлу доменов" "/opt/etc/domain_bot/my-domains-list.conf")
+    LOG_DIR=$(ask_for_input "Введите путь к папке для логов" "/opt/etc/domain_bot/logs")
 
     # Создание папки для логов
     mkdir -p "$LOG_DIR"

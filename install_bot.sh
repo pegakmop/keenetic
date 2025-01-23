@@ -137,7 +137,10 @@ process_message() {
             list_domains
             ;;
         *)
-            send_telegram_message "❌ Неизвестная команда. Доступные команды:\n/add <domain>\n/remove <domain>\n/list"
+            # Игнорируем сообщения, которые не являются командами
+            if [[ "\$COMMAND" =~ ^/ ]]; then
+                send_telegram_message "❌ Неизвестная команда. Доступные команды:\n/add <domain>\n/remove <domain>\n/list"
+            fi
             ;;
     esac
 }

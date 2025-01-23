@@ -39,7 +39,10 @@ create_initd_script() {
     local BOT_SCRIPT="$1"
     local LOG_FILE="$2"
 
-    cat <<EOF > /etc/init.d/domain_bot
+    # Путь к init.d-скрипту
+    INITD_SCRIPT="/opt/etc/init.d/domain_bot"
+
+    cat <<EOF > "$INITD_SCRIPT"
 #!/bin/sh /etc/rc.common
 
 START=99
@@ -71,9 +74,16 @@ restart() {
 }
 EOF
 
-    chmod +x /etc/init.d/domain_bot
-    /etc/init.d/domain_bot enable
-    echo "✅ Скрипт domain_bot добавлен в init.d и автозагрузку."
+    chmod +x "$INITD_SCRIPT"
+    echo "✅ Скрипт domain_bot добавлен в /opt/etc/init.d/."
+
+    # Добавление в автозагрузку
+    if [ -d "/opt/etc/rc.d" ]; then
+        ln -s "../init.d/domain_bot" "/opt/etc/rc.d/S99domain_bot"
+        echo "✅ Бот добавлен в автозагрузку."
+    else
+        echo "❌ Папка /opt/etc/rc.d не найдена. Автозагрузка не настроена."
+    fi
 }
 
 # Установка бота
@@ -224,7 +234,7 @@ EOF
 
     # Запуск бота
     echo "Запуск бота..."
-    /etc/init.d/domain_bot start
+    /opt/etc/init.d/domain_bot start
 
     echo "=== Установка завершена ==="
     echo "Бот запущен и добавлен в автозагрузку."
@@ -242,7 +252,7 @@ update_bot() {
     fi
 
     # Остановка текущего процесса бота
-    /etc/init.d/domain_bot stop
+    /opt/etc/init.d/domain_bot stop
 
     # Удаление старого скрипта
     rm -f "/opt/bin/domain_bot.sh" && echo "✅ Старый скрипт бота удалён."
@@ -262,15 +272,21 @@ remove_bot() {
     fi
 
     # Остановка текущего процесса бота
-    /etc/init.d/domain_bot stop
+    /opt/etc/init.d/domain_bot stop
 
     # Удаление скрипта
     rm -f "/opt/bin/domain_bot.sh" && echo "✅ Скрипт бота удалён."
 
     # Удаление из автозагрузки
-    /etc/init.d/domain_bot disable
-    rm -f /etc/init.d/domain_bot
-    echo "✅ Бот удалён из автозагрузки."
+    if [ -f "/opt/etc/init.d/domain_bot" ]; then
+        rm -f "/opt/etc/init.d/domain_bot"
+        echo "✅ Скрипт domain_bot удалён из /opt/etc/init.d/."
+    fi
+
+    if [ -f "/opt/etc/rc.d/S99domain_bot" ]; then
+        rm -f "/opt/etc/rc.d/S99domain_bot"
+        echo "✅ Бот удалён из автозагрузки."
+    fi
 
     echo "=== Удаление завершено ==="
 }

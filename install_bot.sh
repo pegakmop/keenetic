@@ -45,11 +45,6 @@ create_initd_script() {
     cat <<EOF > "$INITD_SCRIPT"
 #!/bin/sh
 
-# Загружаем конфигурацию (если есть)
-if [ -f /opt/etc/domain_bot/domain_bot.conf ]; then
-    . /opt/etc/domain_bot/domain_bot.conf
-fi
-
 # Настройки
 ENABLED=yes
 PROCS=domain_bot.sh
@@ -70,17 +65,39 @@ pre_start() {
 post_stop() {
     echo "Очистка после остановки бота..."
 }
+
+# Управление командами
+case "\$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    status)
+        check
+        ;;
+    *)
+        echo "Использование: \$0 {start|stop|restart|status}"
+        exit 1
+        ;;
+esac
+
+exit 0
 EOF
 
     chmod +x "$INITD_SCRIPT"
     echo "✅ Скрипт domain_bot добавлен в /opt/etc/init.d/."
 
-    # Добавление в автозагрузку
-    if [ -d "/opt/etc/rc.d" ]; then
-        ln -s "../init.d/domain_bot" "/opt/etc/rc.d/S99domain_bot"
-        echo "✅ Бот добавлен в автозагрузку."
+    # Добавление в автозагрузку через /etc/rc.local
+    if ! grep -qF "$BOT_SCRIPT" /etc/rc.local; then
+        sed -i "/exit 0/i $BOT_SCRIPT &" /etc/rc.local
+        echo "✅ Бот добавлен в автозагрузку через /etc/rc.local."
     else
-        echo "❌ Папка /opt/etc/rc.d не найдена. Автозагрузка не настроена."
+        echo "ℹ️ Бот уже добавлен в автозагрузку."
     fi
 }
 
@@ -276,14 +293,11 @@ remove_bot() {
     rm -f "/opt/bin/domain_bot.sh" && echo "✅ Скрипт бота удалён."
 
     # Удаление из автозагрузки
-    if [ -f "/opt/etc/init.d/domain_bot" ]; then
-        rm -f "/opt/etc/init.d/domain_bot"
-        echo "✅ Скрипт domain_bot удалён из /opt/etc/init.d/."
-    fi
-
-    if [ -f "/opt/etc/rc.d/S99domain_bot" ]; then
-        rm -f "/opt/etc/rc.d/S99domain_bot"
+    if grep -qF "/opt/bin/domain_bot.sh" /etc/rc.local; then
+        sed -i "\|/opt/bin/domain_bot.sh|d" /etc/rc.local
         echo "✅ Бот удалён из автозагрузки."
+    else
+        echo "ℹ️ Бот не был добавлен в автозагрузку."
     fi
 
     echo "=== Удаление завершено ==="

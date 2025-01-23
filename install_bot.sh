@@ -34,15 +34,46 @@ ask_for_input() {
     echo "$input"
 }
 
-# Остановка текущего процесса бота
-stop_bot() {
-    PID=$(pidof domain_bot.sh)
-    if [ -n "$PID" ]; then
-        kill "$PID"
+# Создание init.d-скрипта
+create_initd_script() {
+    local BOT_SCRIPT="$1"
+    local LOG_FILE="$2"
+
+    cat <<EOF > /etc/init.d/domain_bot
+#!/bin/sh /etc/rc.common
+
+START=99
+STOP=10
+
+BOT_SCRIPT="$BOT_SCRIPT"
+LOG_FILE="$LOG_FILE"
+
+start() {
+    echo "Запуск бота..."
+    \$BOT_SCRIPT >> "\$LOG_FILE" 2>&1 &
+}
+
+stop() {
+    echo "Остановка бота..."
+    PID=\$(pidof domain_bot.sh)
+    if [ -n "\$PID" ]; then
+        kill "\$PID"
         echo "✅ Процесс domain_bot.sh остановлен."
     else
         echo "❌ Процесс domain_bot.sh не найден."
     fi
+}
+
+restart() {
+    stop
+    sleep 1
+    start
+}
+EOF
+
+    chmod +x /etc/init.d/domain_bot
+    /etc/init.d/domain_bot enable
+    echo "✅ Скрипт domain_bot добавлен в init.d и автозагрузку."
 }
 
 # Установка бота
@@ -164,19 +195,22 @@ while true; do
         -d "timeout=60")
 
     # Обработка каждого обновления
-    echo "\$UPDATES" | jq -r '.result[] | @base64' | while read -r UPDATE; do
-        UPDATE=\$(echo "\$UPDATE" | base64 -d)
-        OFFSET=\$(echo "\$UPDATE" | jq '.update_id')
-        MESSAGE=\$(echo "\$UPDATE" | jq -r '.message.text')
-        CHAT_ID=\$(echo "\$UPDATE" | jq -r '.message.chat.id')
+    UPDATES_COUNT=\$(echo "\$UPDATES" | jq '.result | length')
+    if [ "\$UPDATES_COUNT" -gt 0 ]; then
+        echo "\$UPDATES" | jq -r '.result[] | @base64' | while read -r UPDATE; do
+            UPDATE=\$(echo "\$UPDATE" | base64 -d)
+            OFFSET=\$(echo "\$UPDATE" | jq '.update_id')
+            MESSAGE=\$(echo "\$UPDATE" | jq -r '.message.text')
+            CHAT_ID=\$(echo "\$UPDATE" | jq -r '.message.chat.id')
 
-        if [ "\$CHAT_ID" = "\$CHAT_ID" ]; then
-            process_message "\$MESSAGE"
-        fi
+            if [ "\$CHAT_ID" = "\$CHAT_ID" ]; then
+                process_message "\$MESSAGE"
+            fi
 
-        # Увеличиваем OFFSET, чтобы избежать повторной обработки
-        OFFSET=\$((OFFSET + 1))
-    done
+            # Увеличиваем OFFSET, чтобы избежать повторной обработки
+            OFFSET=\$((OFFSET + 1))
+        done
+    fi
 
     sleep 1
 done
@@ -185,17 +219,12 @@ EOF
     # Установка прав на выполнение
     chmod +x "$BOT_SCRIPT"
 
-    # Добавление в автозагрузку
-    if ! grep -q "$BOT_SCRIPT" /etc/rc.local; then
-        sed -i "/exit 0/i $BOT_SCRIPT &" /etc/rc.local
-        echo "✅ Скрипт добавлен в автозагрузку."
-    else
-        echo "ℹ️ Скрипт уже добавлен в автозагрузку."
-    fi
+    # Создание init.d-скрипта
+    create_initd_script "$BOT_SCRIPT" "$LOG_FILE"
 
     # Запуск бота
     echo "Запуск бота..."
-    "$BOT_SCRIPT" &
+    /etc/init.d/domain_bot start
 
     echo "=== Установка завершена ==="
     echo "Бот запущен и добавлен в автозагрузку."
@@ -213,7 +242,7 @@ update_bot() {
     fi
 
     # Остановка текущего процесса бота
-    stop_bot
+    /etc/init.d/domain_bot stop
 
     # Удаление старого скрипта
     rm -f "/opt/bin/domain_bot.sh" && echo "✅ Старый скрипт бота удалён."
@@ -233,13 +262,15 @@ remove_bot() {
     fi
 
     # Остановка текущего процесса бота
-    stop_bot
+    /etc/init.d/domain_bot stop
 
     # Удаление скрипта
     rm -f "/opt/bin/domain_bot.sh" && echo "✅ Скрипт бота удалён."
 
     # Удаление из автозагрузки
-    sed -i '/domain_bot.sh/d' /etc/rc.local && echo "✅ Бот удалён из автозагрузки."
+    /etc/init.d/domain_bot disable
+    rm -f /etc/init.d/domain_bot
+    echo "✅ Бот удалён из автозагрузки."
 
     echo "=== Удаление завершено ==="
 }

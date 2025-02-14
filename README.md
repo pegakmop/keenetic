@@ -58,7 +58,7 @@
 
 3. **Создание локального файла (если отсутствует)**:  
    ```bash
-   touch /opt/etc/AdGuardHome/my-domains-list.conf
+   vim /opt/etc/AdGuardHome/my-domains-list.conf
    ```
 
 4. **Проверка структуры директорий**:  

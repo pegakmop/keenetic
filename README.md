@@ -47,7 +47,7 @@
 
 1. **Скачивание скрипта**:  
    ```bash
-   curl -o /opt/etc/AdGuardHome/update_sites.sh https://raw.githubusercontent.com/mdxl/keenetic/main/update_sites.sh
+   curl -o /opt/etc/AdGuardHome/update_sites.sh https://raw.githubusercontent.com/pegakmop/keenetic/main/update_sites.sh
    ```
 
 2. **Настройка прав доступа**:  
@@ -175,8 +175,8 @@ sub.example.com
 ### **2. Итоговый файл: `ipset.conf`**
 Формат итогового файла:
 ```
-example.com/bypass,bypass6
-test.com/bypass,bypass6
+example.com/hr2
+test.com/hr2
 ```
 
 ---

@@ -7,7 +7,7 @@ SCRIPT_LOG_DIR="/opt/etc/AdGuardHome/script_logs"
 mkdir -p "$SCRIPT_LOG_DIR"
 
 # URL проекта на GitHub, содержащего список сайтов
-GITHUB_URL="https://raw.githubusercontent.com/itdoginfo/allow-domains/main/Russia/inside-raw.lst"
+GITHUB_URL="https://raw.githubusercontent.com/pegakmop/keenetic/refs/heads/main/allow-domains/Russia/inside-raw.lst"
 
 # Локальные файлы
 OUTPUT_FILE="/opt/etc/AdGuardHome/ipset.conf"

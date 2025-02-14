@@ -125,7 +125,7 @@ process_file "$TEMP_FILE"
 # Формируем итоговый файл
 log "Формирование итогового файла: $OUTPUT_FILE"
 sort "$UNIQUE_TMP_FILE" | uniq | while IFS= read -r unique_site || [ -n "$unique_site" ]; do
-    echo "$unique_site/bypass,bypass6" >> "$OUTPUT_FILE"
+    echo "$unique_site/hr2" >> "$OUTPUT_FILE"
 done
 check_error "Формирование итогового файла"
 log "Итоговый файл успешно сформирован."
